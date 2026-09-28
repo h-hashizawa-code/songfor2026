@@ -1,0 +1,46 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>出場者枠の残り｜SONG for… 2026</title>
+<style>
+:root{color-scheme:light;--or:#D9793F;--cream:#FBF3E6;--teal:#2F7F79;--navy:#274648;--ink:#2B3A3D;--mute:#7A6A5B;--line:#E6CBA8}
+*{box-sizing:border-box}
+html,body{background:#FFFFFF;margin:0}
+.err,.card,.note{overflow-wrap:anywhere}
+body{font-family:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;color:var(--ink);padding:18px 16px 40px;line-height:1.6;max-width:520px;margin:0 auto}
+.ey{font-weight:700;letter-spacing:.08em;color:var(--or);font-size:12px}
+h1{font-size:20px;margin:2px 0 14px;color:var(--navy)}
+.card{background:var(--cream);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+.nm{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.big{display:flex;gap:10px;margin:8px 0}
+.big div{flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center}
+.big b{display:block;font-size:30px;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.2}
+.big span{font-size:12px;color:var(--mute)}
+.big .rm b{color:var(--teal)}
+.note{font-size:13px;color:var(--mute)}
+.st{font-size:14px;font-weight:700;margin:6px 0}
+.ok{color:var(--teal)}.ng{color:#B4552B}
+a.btn{display:block;text-align:center;background:var(--teal);color:#fff;text-decoration:none;font-weight:700;border-radius:10px;padding:12px;margin-top:10px}
+.err{background:#FBE9DB;border:1px solid var(--or);border-radius:10px;padding:12px;color:#8A4520}
+</style></head><body>
+<div class="ey">SONG for… 2026 #広島から音楽を</div>
+<h1>出場者枠の残り</h1>
+<div id="out"><p class="note">読み込み中…</p></div>
+<script>
+var API="https://script.google.com/macros/s/AKfycbwrJ6uHeQw9dWLuo8t25f0zwOZCd6R10cUxUMXhFngJs-U4p6ZCvEKFZZhBzxvLDqKsCw/exec";
+function q(k){var m=location.search.match(new RegExp("[?&]"+k+"=([^&]+)"));return m?decodeURIComponent(m[1]):"";}
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;}
+function show(d){var o=document.getElementById("out");o.innerHTML="";
+ if(!d||!d.ok){o.appendChild(el("div","err",d&&d.msg?d.msg:"読み込めませんでした。少し時間をおいて開き直してください。"));return;}
+ var c=el("div","card");c.appendChild(el("div","nm",d.name+" さん"));
+ if(!d.declared){c.appendChild(el("p","st ng","まだ出場者枠を押さえていません"));
+  c.appendChild(el("p","note","申告リンクから枚数（1〜"+d.max+"枚）を送ると、その枚数の席を押さえます。"));}
+ else{var b=el("div","big");
+  [["申告",d.declared],["予約済み",d.booked],["残り",d.remain]].forEach(function(x,i){var v=el("div",i===2?"rm":"");v.appendChild(el("b",null,String(x[1])));v.appendChild(el("span",null,x[0]+"（枚）"));b.appendChild(v);});
+  c.appendChild(b);c.appendChild(el("p","note","うち入金済み "+d.paid+"枚"+(d.declaredAt?"／最後の申告 "+d.declaredAt:"")));}
+ if(d.phase==="after"){c.appendChild(el("p","st","出場者枠は締め切りました（"+d.end+"）。"+d.after+"からは通常販売です。"));}
+ else{c.appendChild(el("p","note","出場者枠の期間："+d.start+"〜"+d.end+"。お客さんは、あなたの専用予約リンクから期間内にご予約ください（支払いは各自）。使われなかった分は "+d.after+" から通常販売に回ります。"));
+  if(d.declLink){var a=el("a","btn","枚数を申告する・変える");a.href=d.declLink;a.target="_blank";c.appendChild(a);}}
+ o.appendChild(c);o.appendChild(el("p","note","このページは、あなた専用のリンクです。ほかの人には渡さないでください。"));}
+var h=q("h"),k=q("k");
+if(!h||!k){show({ok:false,msg:"リンクが正しくありません。運営からお送りしたリンクを開いてください。"});}
+else{fetch(API+"?api=hold&h="+encodeURIComponent(h)+"&k="+encodeURIComponent(k)).then(function(r){return r.json();}).then(show).catch(function(){
+ var s=document.createElement("script");window.__cb=show;s.src=API+"?api=hold&h="+encodeURIComponent(h)+"&k="+encodeURIComponent(k)+"&callback=__cb";s.onerror=function(){show(null);};document.body.appendChild(s);});}
+</script></body></html>
