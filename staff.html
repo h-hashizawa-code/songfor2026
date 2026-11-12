@@ -34,6 +34,11 @@ main{padding:6px 10px 80px}
 .towel{display:inline-block;background:#fff4d6;border:1px solid #e0b84a;border-radius:6px;padding:0 5px;font-size:12px;font-weight:700;color:#8a6200}
 #msg{position:fixed;left:10px;right:10px;bottom:12px;background:var(--navy);color:#fff;padding:10px 12px;border-radius:10px;font-size:14px;display:none;z-index:9}
 .empty{color:#666;text-align:center;margin:30px 0}
+.card.new,.ri.new{background:#fff6cc;border-color:#e0b84a}
+.recent{border:2px solid var(--teal);border-radius:10px;padding:6px 10px;margin:8px 0}
+.rt{font-size:12px;font-weight:700;color:var(--teal);margin-bottom:2px}
+.ri{font-size:14px;padding:4px 4px;border-bottom:1px dashed var(--line);border-radius:6px}
+.ri:last-child{border-bottom:0}.ri b{display:inline-block;min-width:30px;color:var(--navy)}.ri span{font-size:12px;color:#666}
 </style></head>
 <body>
 <header>
@@ -54,7 +59,12 @@ function toast(t){var m=document.getElementById("msg");m.textContent=t;m.style.d
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 function load(quiet){if(!K){document.getElementById("sum").textContent="URLに鍵がありません。運営から届いたURLを開いてください。";return;}
   call({api:"staff",k:K}).then(function(d){if(!d.ok){document.getElementById("sum").textContent=d.msg||"読み込めませんでした";return;}
-    DATA=d.list;document.getElementById("upd").textContent=d.now+" 更新";render();}).catch(function(){if(!quiet)toast("通信できませんでした。電波を確認して、もう一度。");});}
+    var prev={};DATA.forEach(function(x){prev[x.r]=x.came;});var first=!DATA.length,arr=[];
+    d.list.forEach(function(x){if(!first&&x.came>(prev[x.r]||0)){NEWAT[x.r]=Date.now();arr.push(x);}});
+    DATA=d.list;document.getElementById("upd").textContent=d.now+" 更新";render();
+    if(arr.length)toast("受付が入りました："+arr.map(function(x){return x.r+" "+x.name+"様 "+x.came+"／"+x.n+"名"+(x.kind==="sponsor"&&x.table?"（"+x.table+"テーブル）":"");}).join("、"));})
+    .catch(function(){if(!quiet)toast("通信できませんでした。電波を確認して、もう一度。");});}
+var NEWAT={};
 function cnt(f){var n=0,c=0;DATA.forEach(function(g){if(f(g)){n+=g.n;c+=g.came;}});return [c,n];}
 function render(){
   var a=cnt(function(){return true;}),s=cnt(function(g){return g.kind==="sponsor";}),g=cnt(function(g){return g.kind!=="sponsor";});
@@ -66,14 +76,18 @@ function render(){
     if(q){var h=(x.r+x.name+x.company+x.ref).replace(/[\s　]/g,"").toLowerCase();if(h.indexOf(q)<0&&h.indexOf("r-"+q)<0&&h.indexOf("r-00"+q)<0)return false;}
     return true;});
   if(TAB==="sponsor")L.sort(function(a,b){return (a.table+a.r)<(b.table+b.r)?-1:1;});
-  var h=L.map(function(x){
+  var R=DATA.filter(function(x){return x.came>0&&(TAB==="all"||(TAB==="sponsor")===(x.kind==="sponsor"));})
+    .sort(function(a,b){var d=(NEWAT[b.r]||0)-(NEWAT[a.r]||0);return d||(String(b.at)>String(a.at)?1:-1);}).slice(0,6);
+  var rec=R.length&&!q?'<div class="recent"><div class="rt">最近の受付（新しい順）</div>'+R.map(function(x){
+    return '<div class="ri'+(Date.now()-(NEWAT[x.r]||0)<90000?" new":"")+'"><b>'+esc(x.kind==="sponsor"?(x.table||"？"):(x.kind==="chair"?"椅子":"一般"))+'</b> '+esc(x.name)+'様 '+x.came+"／"+x.n+'名 <span>'+esc(x.at)+(x.towel?"・タオル"+x.towel:"")+"</span></div>";}).join("")+"</div>":"";
+  var h=rec+L.map(function(x){
     var done=x.came>=x.n, tk=x.kind==="chair"?"椅子":(x.kind==="sponsor"?(x.table||"？"):"");
     var tkSub=x.kind==="sponsor"?"テーブル":(x.kind==="chair"?"後方":"一般");
     var st=done?'<div class="st ok">来場済み '+x.came+"／"+x.n+"名（"+esc(x.at)+"）</div>":(x.came?'<div class="st no">一部来場 '+x.came+"／"+x.n+"名</div>":'<div class="st no">未着 0／'+x.n+"名</div>");
     if(!x.paid)st+='<div class="st no">未入金（統括へ）</div>';
     var b=done?'':('<button onclick="mark(\''+x.r+'\',0)">全員来場</button>'+(x.n-x.came>1?'<button class="sub" onclick="mark(\''+x.r+'\',1)">1人来場</button>':''));
     if(x.came)b+='<button class="undo" onclick="undo(\''+x.r+'\')">取消</button>';
-    return '<div class="card'+(done?" done":"")+'"><div class="tk">'+esc(tk)+'<small>'+tkSub+'</small></div><div class="info">'+
+    return '<div class="card'+(done?" done":"")+(Date.now()-(NEWAT[x.r]||0)<90000?" new":"")+'"><div class="tk">'+esc(tk)+'<small>'+tkSub+'</small></div><div class="info">'+
       (x.company?'<div class="co">'+esc(x.company)+'</div>':"")+'<div class="nm">'+esc(x.name)+' 様</div>'+
       '<div class="meta">'+esc(x.r)+"・"+x.n+"名"+(x.ref&&x.kind!=="sponsor"?"・"+esc(x.ref):"")+(x.towel?' <span class="towel">タオル'+x.towel+"</span>":"")+"</div>"+st+
       '</div><div class="btns">'+b+"</div></div>";}).join("");
@@ -86,6 +100,6 @@ function undo(r){if(busy)return;if(!confirm(r+" の来場を1人分取り消し�
   .catch(function(){busy=false;toast("通信できませんでした。");});}
 document.querySelectorAll(".tabs button").forEach(function(b){b.onclick=function(){document.querySelectorAll(".tabs button").forEach(function(x){x.classList.remove("on");});b.classList.add("on");TAB=b.getAttribute("data-t");render();};});
 document.getElementById("q").oninput=render;document.getElementById("notyet").onchange=render;
-load();setInterval(function(){if(!busy&&!document.hidden)load(true);},30000);
+load();setInterval(function(){if(!busy&&!document.hidden)load(true);},10000);
 </script>
 </body></html>
