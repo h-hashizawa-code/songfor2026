@@ -26,7 +26,8 @@ main{padding:6px 10px 80px}
 .co{font-size:12px;color:#444}
 .meta{font-size:12px;color:#555;margin-top:2px}
 .st{font-size:13px;font-weight:700;margin-top:3px}
-.st.ok{color:#007a80}.st.no{color:var(--warn)}
+.st.ok{color:#007a80}.st.no{color:var(--warn)}.st.part{color:#8a6200}.st.part b{background:#fff4d6;border:1px solid #e0b84a;border-radius:6px;padding:0 6px}
+.card.part{border-color:#e0b84a}
 .btns{display:flex;flex-direction:column;gap:5px}
 .btns button{font-size:14px;padding:8px 10px;border-radius:8px;border:0;background:var(--teal);color:#fff;font-weight:700;min-width:84px}
 .btns button.sub{background:#fff;color:var(--navy);border:1px solid #9aa}
@@ -63,13 +64,14 @@ function load(quiet){if(!K){document.getElementById("sum").textContent="URLに�
     var prev={};DATA.forEach(function(x){prev[x.r]=x.came;});var first=!DATA.length,arr=[];
     d.list.forEach(function(x){if(!first&&x.came>(prev[x.r]||0)){NEWAT[x.r]=Date.now();arr.push(x);}});
     DATA=d.list;document.getElementById("upd").textContent=d.now+" 更新";render();
-    if(arr.length)toast("受付が入りました："+arr.map(function(x){return x.r+" "+x.name+"様 "+x.came+"／"+x.n+"名"+(x.kind==="sponsor"&&x.table?"（"+x.table+"テーブル）":"");}).join("、"));})
+    if(arr.length)toast("受付が入りました："+arr.map(function(x){return x.r+" "+x.name+"様 "+x.came+"／"+x.n+"名"+(x.came<x.n?"（あと"+(x.n-x.came)+"名）":"")+(x.kind==="sponsor"&&x.table?"（"+x.table+"テーブル）":"");}).join("、"));})
     .catch(function(){if(!quiet)toast("通信できませんでした。電波を確認して、もう一度。");});}
 var NEWAT={};
 function cnt(f){var n=0,c=0;DATA.forEach(function(g){if(f(g)){n+=g.n;c+=g.came;}});return [c,n];}
 function render(){
   var a=cnt(function(){return true;}),s=cnt(function(g){return g.kind==="sponsor";}),g=cnt(function(g){return g.kind!=="sponsor";});
-  document.getElementById("sum").innerHTML="来場 <b>"+a[0]+"</b>／"+a[1]+"名　協賛 "+s[0]+"／"+s[1]+"　一般 "+g[0]+"／"+g[1];
+  var pg=DATA.filter(function(x){return x.came>0&&x.came<x.n;}).length;
+  document.getElementById("sum").innerHTML="来場 <b>"+a[0]+"</b>／"+a[1]+"名　協賛 "+s[0]+"／"+s[1]+"　一般 "+g[0]+"／"+g[1]+(pg?'　<span style="color:#8a6200">一部来場 '+pg+"組</span>":"");
   var q=document.getElementById("q").value.trim().replace(/[\s　]/g,"").toLowerCase(), ny=document.getElementById("notyet").checked;
   var L=DATA.filter(function(x){
     if(TAB==="sponsor"&&x.kind!=="sponsor")return false; if(TAB==="general"&&x.kind==="sponsor")return false;
@@ -80,21 +82,25 @@ function render(){
   var R=DATA.filter(function(x){return x.came>0&&(TAB==="all"||(TAB==="sponsor")===(x.kind==="sponsor"));})
     .sort(function(a,b){var d=(NEWAT[b.r]||0)-(NEWAT[a.r]||0);return d||(String(b.at)>String(a.at)?1:-1);}).slice(0,6);
   var rec=R.length&&!q?'<div class="recent"><div class="rt">最近の受付（新しい順）</div>'+R.map(function(x){
-    return '<div class="ri'+(Date.now()-(NEWAT[x.r]||0)<90000?" new":"")+'"><b>'+esc(x.kind==="sponsor"?(x.table||"？"):(x.kind==="chair"?"椅子":"一般"))+'</b> '+esc(x.name)+'様 '+x.came+"／"+x.n+'名 <span>'+esc(x.at)+(x.towel?"・タオル"+x.towel:"")+"</span></div>";}).join("")+"</div>":"";
+    return '<div class="ri'+(Date.now()-(NEWAT[x.r]||0)<90000?" new":"")+'"><b>'+esc(x.kind==="sponsor"?(x.table||"？"):(x.kind==="chair"?"椅子":"一般"))+'</b> '+esc(x.name)+'様 '+x.came+"／"+x.n+'名'+(x.came<x.n?"（あと"+(x.n-x.came)+"名）":"")+' <span>'+esc(x.at)+(x.towel?"・タオル"+x.towel:"")+"</span></div>";}).join("")+"</div>":"";
   var h=rec+L.map(function(x){
     var done=x.came>=x.n, tk=x.kind==="chair"?"椅子":(x.kind==="sponsor"?(x.table||"？"):"");
     var tkSub=x.kind==="sponsor"?"テーブル":(x.kind==="chair"?"後方":"一般");
-    var st=done?'<div class="st ok">来場済み '+x.came+"／"+x.n+"名（"+esc(x.at)+"）</div>":(x.came?'<div class="st no">一部来場 '+x.came+"／"+x.n+"名</div>":'<div class="st no">未着 0／'+x.n+"名</div>");
+    var rest=x.n-x.came;
+    var st=done?'<div class="st ok">来場済み '+x.came+"／"+x.n+"名（"+esc(x.at)+"）</div>":(x.came?'<div class="st part">一部来場 '+x.came+"／"+x.n+"名　<b>あと"+rest+"名</b></div>":'<div class="st no">未着 0／'+x.n+"名</div>");
     if(!x.paid)st+='<div class="st no">未入金（統括へ）</div>';
-    var b=done?'':('<button onclick="mark(\''+x.r+'\',0)">全員来場</button>'+(x.n-x.came>1?'<button class="sub" onclick="mark(\''+x.r+'\',1)">1人来場</button>':''));
+    // ★2026-11-12 橋沢さん「個人来場に対応」：別々に来たら1人ずつ。一部来場の組は「1人来場」を主ボタンに、残り人数を出す
+    var b=done?'':(x.came?
+      ('<button onclick="mark(\''+x.r+'\',1)">1人来場</button>'+(rest>1?'<button class="sub" onclick="mark(\''+x.r+'\',0)">残り'+rest+'名とも</button>':'')):
+      ('<button onclick="mark(\''+x.r+'\',0)">'+(x.n>1?'全員来場（'+x.n+'名）':'来場')+'</button>'+(x.n>1?'<button class="sub" onclick="mark(\''+x.r+'\',1)">1人来場</button>':'')));
     if(x.came)b+='<button class="undo" onclick="undo(\''+x.r+'\')">取消</button>';
-    return '<div class="card'+(done?" done":"")+(Date.now()-(NEWAT[x.r]||0)<90000?" new":"")+'"><div class="tk">'+esc(tk)+'<small>'+tkSub+'</small></div><div class="info">'+
+    return '<div class="card'+(done?" done":(x.came?" part":""))+(Date.now()-(NEWAT[x.r]||0)<90000?" new":"")+'"><div class="tk">'+esc(tk)+'<small>'+tkSub+'</small></div><div class="info">'+
       (x.company?'<div class="co">'+esc(x.company)+'</div>':"")+'<div class="nm">'+esc(x.name)+' 様</div>'+
       '<div class="meta">'+esc(x.r)+"・"+x.n+"名"+(x.ref&&x.kind!=="sponsor"?"・"+esc(x.ref):"")+(x.towel?' <span class="towel">タオル'+x.towel+"</span>":"")+"</div>"+st+
       '</div><div class="btns">'+b+"</div></div>";}).join("");
   document.getElementById("list").innerHTML=h||'<p class="empty">該当なし</p>';}
 function mark(r,n){if(busy)return;busy=true;toast(r+" を登録中…");
-  call({api:"staffIn",k:K,r:r,n:n}).then(function(d){busy=false;if(!d.ok){toast(d.msg);return;}toast(r+" 来場 "+d.came+"／"+d.n+"名");load(true);})
+  call({api:"staffIn",k:K,r:r,n:n}).then(function(d){busy=false;if(!d.ok){toast(d.msg);return;}toast(r+" 来場 "+d.came+"／"+d.n+"名"+(d.came<d.n?"（あと"+(d.n-d.came)+"名）":""));load(true);})
   .catch(function(){busy=false;toast("通信できませんでした。もう一度押してください。");});}
 function undo(r){if(busy)return;if(!confirm(r+" の来場を1人分取り消しますか？"))return;busy=true;
   call({api:"staffUndo",k:K,r:r,n:1}).then(function(d){busy=false;if(!d.ok){toast(d.msg);return;}toast(r+" 取消 → 来場 "+d.came+"／"+d.n+"名");load(true);})
