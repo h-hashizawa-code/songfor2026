@@ -87,8 +87,8 @@ function render(){
   var rec=R.length&&!q?'<div class="recent"><div class="rt">最近の受付（新しい順）</div>'+R.map(function(x){
     return '<div class="ri'+(Date.now()-(NEWAT[x.r]||0)<90000?" new":"")+'"><b>'+esc(x.kind==="sponsor"?(x.table||"？"):(x.kind==="chair"?"椅子":"一般"))+'</b> '+esc(x.name)+'様 '+x.came+"／"+x.n+'名'+(x.came<x.n?"（あと"+(x.n-x.came)+"名）":"")+' <span>'+esc(x.at)+(x.towel?"・タオル"+x.towel:"")+"</span></div>";}).join("")+"</div>":"";
   var h=rec+L.map(function(x){
-    var done=x.came>=x.n, tk=x.kind==="chair"?"椅子":(x.kind==="sponsor"?(x.table||"？"):"");
-    var tkSub=x.kind==="sponsor"?"テーブル":(x.kind==="chair"?"後方":"一般");
+    var done=x.came>=x.n, ab=/^[A-D]$/.test(x.table||""), tk=x.kind==="chair"?"椅子":(x.kind==="sponsor"?(x.table||"？"):(ab?x.table:""));
+    var tkSub=(x.kind==="sponsor"||ab)?"テーブル":(x.kind==="chair"?"後方":"一般");
     var rest=x.n-x.came;
     var st=done?'<div class="st ok">来場済み '+x.came+"／"+x.n+"名（"+esc(x.at)+"）</div>":(x.came?'<div class="st part">一部来場 '+x.came+"／"+x.n+"名　<b>あと"+rest+"名</b></div>":'<div class="st no">未着 0／'+x.n+"名</div>");
     if(!x.paid)st+='<div class="st no">未入金（統括へ）</div>';
