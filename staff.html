@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>SONG for… 2026 受付スタッフ</title>
+<style>
+:root{color-scheme:light;--teal:#00A9B2;--navy:#163a4a;--line:#d6dde0;--warn:#c0392b}
+html,body{background:#fff;margin:0;color:#111;font-family:-apple-system,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif}
+header{position:sticky;top:0;background:#fff;border-bottom:2px solid var(--teal);padding:8px 12px 6px;z-index:5}
+h1{font-size:15px;margin:0;color:var(--navy)}
+.sum{font-size:13px;margin:4px 0 6px;display:flex;gap:10px;flex-wrap:wrap}
+.sum b{font-size:17px;color:var(--navy)}
+.tabs{display:flex;gap:6px;margin-bottom:6px}
+.tabs button{flex:1;padding:8px 0;border:1px solid var(--line);background:#f4f7f8;border-radius:8px;font-size:14px;font-weight:700}
+.tabs button.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+.row2{display:flex;gap:6px}
+#q{flex:1;font-size:16px;padding:8px 10px;border:1px solid #9aa;border-radius:8px}
+#only{font-size:13px;white-space:nowrap;display:flex;align-items:center;gap:4px}
+main{padding:6px 10px 80px}
+.card{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:8px 0;display:flex;gap:10px;align-items:center}
+.card.done{background:#eef8f8;border-color:#9fd6d9}
+.tk{min-width:46px;text-align:center;font-size:26px;font-weight:800;color:var(--navy);line-height:1}
+.tk small{display:block;font-size:10px;font-weight:600;color:#666;margin-top:2px}
+.info{flex:1;min-width:0}
+.nm{font-size:16px;font-weight:700}
+.co{font-size:12px;color:#444}
+.meta{font-size:12px;color:#555;margin-top:2px}
+.st{font-size:13px;font-weight:700;margin-top:3px}
+.st.ok{color:#007a80}.st.no{color:var(--warn)}
+.btns{display:flex;flex-direction:column;gap:5px}
+.btns button{font-size:14px;padding:8px 10px;border-radius:8px;border:0;background:var(--teal);color:#fff;font-weight:700;min-width:84px}
+.btns button.sub{background:#fff;color:var(--navy);border:1px solid #9aa}
+.btns button.undo{background:#fff;color:#888;border:1px solid #ccc;font-size:12px;padding:5px}
+.towel{display:inline-block;background:#fff4d6;border:1px solid #e0b84a;border-radius:6px;padding:0 5px;font-size:12px;font-weight:700;color:#8a6200}
+#msg{position:fixed;left:10px;right:10px;bottom:12px;background:var(--navy);color:#fff;padding:10px 12px;border-radius:10px;font-size:14px;display:none;z-index:9}
+.empty{color:#666;text-align:center;margin:30px 0}
+</style></head>
+<body>
+<header>
+  <h1>SONG for… 2026 受付スタッフ用 <span id="upd" style="font-size:11px;color:#777;font-weight:400"></span></h1>
+  <div class="sum" id="sum">読み込み中…</div>
+  <div class="tabs"><button data-t="sponsor" class="on">協賛</button><button data-t="general">一般</button><button data-t="all">全部</button></div>
+  <div class="row2"><input id="q" type="search" placeholder="名前・会社・受付番号・紹介者で探す"><label id="only"><input type="checkbox" id="notyet">未着だけ</label></div>
+</header>
+<main id="list"></main>
+<div id="msg"></div>
+<script>
+var API="https://script.google.com/macros/s/AKfycbyKiQlLFh2yOu6vxzFuZ9EKFi89xRDVt_HwWSGOd7aqOw0YX4DVLKgEWBvZlF9g2bSiQA/exec";
+var Q=new URLSearchParams(location.search), K=(Q.get("k")||"").replace(/[^A-Za-z0-9]/g,"");
+var DATA=[], TAB="sponsor", busy=false;
+function call(params){var qs=Object.keys(params).map(function(k){return k+"="+encodeURIComponent(params[k]);}).join("&")+"&_="+Date.now();
+  return fetch(API+"?"+qs,{credentials:"omit",redirect:"follow",cache:"no-store"}).then(function(r){return r.json();});}
+function toast(t){var m=document.getElementById("msg");m.textContent=t;m.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(function(){m.style.display="none";},3500);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function load(quiet){if(!K){document.getElementById("sum").textContent="URLに鍵がありません。運営から届いたURLを開いてください。";return;}
+  call({api:"staff",k:K}).then(function(d){if(!d.ok){document.getElementById("sum").textContent=d.msg||"読み込めませんでした";return;}
+    DATA=d.list;document.getElementById("upd").textContent=d.now+" 更新";render();}).catch(function(){if(!quiet)toast("通信できませんでした。電波を確認して、もう一度。");});}
+function cnt(f){var n=0,c=0;DATA.forEach(function(g){if(f(g)){n+=g.n;c+=g.came;}});return [c,n];}
+function render(){
+  var a=cnt(function(){return true;}),s=cnt(function(g){return g.kind==="sponsor";}),g=cnt(function(g){return g.kind!=="sponsor";});
+  document.getElementById("sum").innerHTML="来場 <b>"+a[0]+"</b>／"+a[1]+"名　協賛 "+s[0]+"／"+s[1]+"　一般 "+g[0]+"／"+g[1];
+  var q=document.getElementById("q").value.trim().replace(/[\s　]/g,"").toLowerCase(), ny=document.getElementById("notyet").checked;
+  var L=DATA.filter(function(x){
+    if(TAB==="sponsor"&&x.kind!=="sponsor")return false; if(TAB==="general"&&x.kind==="sponsor")return false;
+    if(ny&&x.came>=x.n)return false;
+    if(q){var h=(x.r+x.name+x.company+x.ref).replace(/[\s　]/g,"").toLowerCase();if(h.indexOf(q)<0&&h.indexOf("r-"+q)<0&&h.indexOf("r-00"+q)<0)return false;}
+    return true;});
+  if(TAB==="sponsor")L.sort(function(a,b){return (a.table+a.r)<(b.table+b.r)?-1:1;});
+  var h=L.map(function(x){
+    var done=x.came>=x.n, tk=x.kind==="chair"?"椅子":(x.kind==="sponsor"?(x.table||"？"):"");
+    var tkSub=x.kind==="sponsor"?"テーブル":(x.kind==="chair"?"後方":"一般");
+    var st=done?'<div class="st ok">来場済み '+x.came+"／"+x.n+"名（"+esc(x.at)+"）</div>":(x.came?'<div class="st no">一部来場 '+x.came+"／"+x.n+"名</div>":'<div class="st no">未着 0／'+x.n+"名</div>");
+    if(!x.paid)st+='<div class="st no">未入金（統括へ）</div>';
+    var b=done?'':('<button onclick="mark(\''+x.r+'\',0)">全員来場</button>'+(x.n-x.came>1?'<button class="sub" onclick="mark(\''+x.r+'\',1)">1人来場</button>':''));
+    if(x.came)b+='<button class="undo" onclick="undo(\''+x.r+'\')">取消</button>';
+    return '<div class="card'+(done?" done":"")+'"><div class="tk">'+esc(tk)+'<small>'+tkSub+'</small></div><div class="info">'+
+      (x.company?'<div class="co">'+esc(x.company)+'</div>':"")+'<div class="nm">'+esc(x.name)+' 様</div>'+
+      '<div class="meta">'+esc(x.r)+"・"+x.n+"名"+(x.ref&&x.kind!=="sponsor"?"・"+esc(x.ref):"")+(x.towel?' <span class="towel">タオル'+x.towel+"</span>":"")+"</div>"+st+
+      '</div><div class="btns">'+b+"</div></div>";}).join("");
+  document.getElementById("list").innerHTML=h||'<p class="empty">該当なし</p>';}
+function mark(r,n){if(busy)return;busy=true;toast(r+" を登録中…");
+  call({api:"staffIn",k:K,r:r,n:n}).then(function(d){busy=false;if(!d.ok){toast(d.msg);return;}toast(r+" 来場 "+d.came+"／"+d.n+"名");load(true);})
+  .catch(function(){busy=false;toast("通信できませんでした。もう一度押してください。");});}
+function undo(r){if(busy)return;if(!confirm(r+" の来場を1人分取り消しますか？"))return;busy=true;
+  call({api:"staffUndo",k:K,r:r,n:1}).then(function(d){busy=false;if(!d.ok){toast(d.msg);return;}toast(r+" 取消 → 来場 "+d.came+"／"+d.n+"名");load(true);})
+  .catch(function(){busy=false;toast("通信できませんでした。");});}
+document.querySelectorAll(".tabs button").forEach(function(b){b.onclick=function(){document.querySelectorAll(".tabs button").forEach(function(x){x.classList.remove("on");});b.classList.add("on");TAB=b.getAttribute("data-t");render();};});
+document.getElementById("q").oninput=render;document.getElementById("notyet").onchange=render;
+load();setInterval(function(){if(!busy&&!document.hidden)load(true);},30000);
+</script>
+</body></html>
