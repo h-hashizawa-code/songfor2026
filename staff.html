@@ -67,7 +67,7 @@ function load(quiet){if(!K){document.getElementById("sum").textContent="URLに�
     var prev={};DATA.forEach(function(x){prev[x.r]=x.came;});var first=!DATA.length,arr=[];
     d.list.forEach(function(x){if(!first&&x.came>(prev[x.r]||0)){NEWAT[x.r]=Date.now();arr.push(x);}});
     DATA=d.list;document.getElementById("upd").textContent=d.now+" 更新";render();
-    if(arr.length)toast("受付が入りました："+arr.map(function(x){return x.r+" "+x.name+"様 "+x.came+"／"+x.n+"名"+(x.came<x.n?"（あと"+(x.n-x.came)+"名）":"")+(x.kind==="sponsor"&&x.table?"（"+x.table+"テーブル）":"");}).join("、"));})
+    if(arr.length)toast("受付が入りました："+arr.map(function(x){return x.r+" "+x.name+"様 "+x.came+"／"+x.n+"名"+(x.came<x.n?"（あと"+(x.n-x.came)+"名）":"")+(x.table&&/^[A-O]$/.test(x.table)?"（"+x.table+"テーブル）":"");}).join("、"));})
     .catch(function(){if(!quiet)toast("通信できませんでした。電波を確認して、もう一度。");});}
 var NEWAT={};
 function cnt(f){var n=0,c=0;DATA.forEach(function(g){if(f(g)){n+=g.n;c+=g.came;}});return [c,n];}
@@ -85,9 +85,9 @@ function render(){
   var R=DATA.filter(function(x){return x.came>0&&(TAB==="all"||(TAB==="sponsor")===(x.kind==="sponsor"));})
     .sort(function(a,b){var d=(NEWAT[b.r]||0)-(NEWAT[a.r]||0);return d||(String(b.at)>String(a.at)?1:-1);}).slice(0,6);
   var rec=R.length&&!q?'<div class="recent"><div class="rt">最近の受付（新しい順）</div>'+R.map(function(x){
-    return '<div class="ri'+(Date.now()-(NEWAT[x.r]||0)<90000?" new":"")+'"><b>'+esc(x.kind==="sponsor"?(x.table||"？"):(x.kind==="chair"?"椅子":"一般"))+'</b> '+esc(x.name)+'様 '+x.came+"／"+x.n+'名'+(x.came<x.n?"（あと"+(x.n-x.came)+"名）":"")+' <span>'+esc(x.at)+(x.towel?"・タオル"+x.towel:"")+"</span></div>";}).join("")+"</div>":"";
+    return '<div class="ri'+(Date.now()-(NEWAT[x.r]||0)<90000?" new":"")+'"><b>'+esc(x.kind==="sponsor"?(x.table||"？"):(x.kind==="chair"?"椅子":(/^[A-O]$/.test(x.table||"")?x.table:"一般")))+'</b> '+esc(x.name)+'様 '+x.came+"／"+x.n+'名'+(x.came<x.n?"（あと"+(x.n-x.came)+"名）":"")+' <span>'+esc(x.at)+(x.towel?"・タオル"+x.towel:"")+"</span></div>";}).join("")+"</div>":"";
   var h=rec+L.map(function(x){
-    var done=x.came>=x.n, ab=/^[A-D]$/.test(x.table||""), tk=x.kind==="chair"?"椅子":(x.kind==="sponsor"?(x.table||"？"):(ab?x.table:""));
+    var done=x.came>=x.n, ab=/^[A-O]$/.test(x.table||""), tk=x.kind==="chair"?"椅子":(x.kind==="sponsor"?(x.table||"？"):(ab?x.table:""));
     var tkSub=(x.kind==="sponsor"||ab)?"テーブル":(x.kind==="chair"?"後方":"一般");
     var rest=x.n-x.came;
     var st=done?'<div class="st ok">来場済み '+x.came+"／"+x.n+"名（"+esc(x.at)+"）</div>":(x.came?'<div class="st part">一部来場 '+x.came+"／"+x.n+"名　<b>あと"+rest+"名</b></div>":'<div class="st no">未着 0／'+x.n+"名</div>");
